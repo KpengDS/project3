@@ -621,12 +621,22 @@ function drawMap() {
       .domain([minVal, maxVal])
       .interpolator(d3.interpolateYlOrRd);
 
+    // Filter points to reasonable US geographic ranges before drawing
+    const filteredPoints = data.filter(d => {
+      const lon = +d.lon;
+      const lat = +d.lat;
+      const continental = lon >= -125 && lon <= -66 && lat >= 24 && lat <= 50;
+      const alaska = lon >= -170 && lon <= -130 && lat >= 50 && lat <= 72;
+      const hawaii = lon >= -161 && lon <= -154 && lat >= 18 && lat <= 23;
+      return continental || alaska || hawaii;
+    });
+
     // Draw data points
     const pointsGroup = svg.append("g")
       .attr("class", "data-points");
 
     pointsGroup.selectAll("circle")
-      .data(data)
+      .data(filteredPoints)
       .join("circle")
       .attr("cx", d => {
         const coords = projection([d.lon, d.lat]);
