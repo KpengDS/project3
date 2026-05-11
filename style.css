@@ -302,7 +302,7 @@ svg {
 }
 
 .map-svg {
-  background: #f0f5fa;
+  background: #dce5f1;
   border-radius: 12px;
   overflow: visible;
   display: block;
@@ -311,13 +311,13 @@ svg {
 }
 
 .state {
-  fill: #e8eef7;
-  stroke: #c5d3e8;
+  fill: #d1dce8;
+  stroke: #8fa5bf;
   stroke-width: 1px;
 }
 
 .state:hover {
-  fill: #dbe5f0;
+  fill: #c5d7e5;
 }
 
 .data-points circle {
