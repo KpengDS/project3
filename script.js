@@ -610,12 +610,17 @@ const MAP_WIDTH = 900;
 const MAP_HEIGHT = 550;
 let mapProjection;
 let mapCanvas, mapCtx;
+let hoverCanvas, hoverCtx;
 let allProjectedPoints = [];
 let mapQuadtree = null;
 let mapCurrentMeasure = "precip_intensity";
 let mapInterpolator = d3.interpolateYlOrRd;
 let mapMinVal = 0;
 let mapMaxVal = 1;
+let mapAnimTimer = null;
+let lastFillColors = new Map();
+let mapFirstRender = true;
+let hoveredPoint = null;
 
 function drawMap() {
   if (!usTopoData) return;
@@ -712,12 +717,19 @@ function setupMapCanvas() {
     .attr("width", MAP_WIDTH * dpr)
     .attr("height", MAP_HEIGHT * dpr)
     .node();
-
   mapCtx = mapCanvas.getContext("2d");
   mapCtx.scale(dpr, dpr);
 
-  mapCanvas.addEventListener("mousemove", handleMapCanvasMove);
-  mapCanvas.addEventListener("mouseleave", handleMapCanvasLeave);
+  hoverCanvas = container.append("canvas")
+    .attr("class", "map-canvas map-canvas-hover")
+    .attr("width", MAP_WIDTH * dpr)
+    .attr("height", MAP_HEIGHT * dpr)
+    .node();
+  hoverCtx = hoverCanvas.getContext("2d");
+  hoverCtx.scale(dpr, dpr);
+
+  hoverCanvas.addEventListener("mousemove", handleMapCanvasMove);
+  hoverCanvas.addEventListener("mouseleave", handleMapCanvasLeave);
 }
 
 function renderMapPoints() {
@@ -737,21 +749,81 @@ function renderMapPoints() {
   mapMaxVal = d3.max(values);
   const colorScale = d3.scaleSequential().domain([mapMinVal, mapMaxVal]).interpolator(interp);
 
-  mapCtx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
-  mapCtx.globalAlpha = 0.55;
+  const newColors = new Map();
   for (let i = 0; i < visiblePoints.length; i++) {
     const d = visiblePoints[i];
-    mapCtx.fillStyle = colorScale(+d[measure]);
-    mapCtx.beginPath();
-    mapCtx.arc(d.projX, d.projY, 1.5, 0, 2 * Math.PI);
-    mapCtx.fill();
+    newColors.set(d, colorScale(+d[measure]));
   }
-  mapCtx.globalAlpha = 1;
 
   mapQuadtree = d3.quadtree()
     .x(d => d.projX)
     .y(d => d.projY)
     .addAll(visiblePoints);
+
+  if (hoverCtx) {
+    hoverCtx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+    hoveredPoint = null;
+  }
+
+  if (mapAnimTimer) {
+    mapAnimTimer.stop();
+    mapAnimTimer = null;
+  }
+
+  if (mapFirstRender) {
+    drawAllMapPoints(visiblePoints, newColors);
+    lastFillColors = newColors;
+    mapFirstRender = false;
+    return;
+  }
+
+  const colorInterps = new Map();
+  for (let i = 0; i < visiblePoints.length; i++) {
+    const d = visiblePoints[i];
+    const oldColor = lastFillColors.get(d);
+    const newColor = newColors.get(d);
+    if (oldColor && oldColor !== newColor) {
+      colorInterps.set(d, d3.interpolateRgb(oldColor, newColor));
+    }
+  }
+
+  const duration = 380;
+  const ease = d3.easeCubicInOut;
+
+  mapAnimTimer = d3.timer((elapsed) => {
+    const t = ease(Math.min(1, elapsed / duration));
+
+    mapCtx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+    mapCtx.globalAlpha = 0.55;
+    for (let i = 0; i < visiblePoints.length; i++) {
+      const d = visiblePoints[i];
+      const ci = colorInterps.get(d);
+      mapCtx.fillStyle = ci ? ci(t) : newColors.get(d);
+      mapCtx.beginPath();
+      mapCtx.arc(d.projX, d.projY, 1.5, 0, 2 * Math.PI);
+      mapCtx.fill();
+    }
+    mapCtx.globalAlpha = 1;
+
+    if (elapsed >= duration) {
+      mapAnimTimer.stop();
+      mapAnimTimer = null;
+      lastFillColors = newColors;
+    }
+  });
+}
+
+function drawAllMapPoints(visiblePoints, colors) {
+  mapCtx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+  mapCtx.globalAlpha = 0.55;
+  for (let i = 0; i < visiblePoints.length; i++) {
+    const d = visiblePoints[i];
+    mapCtx.fillStyle = colors.get(d);
+    mapCtx.beginPath();
+    mapCtx.arc(d.projX, d.projY, 1.5, 0, 2 * Math.PI);
+    mapCtx.fill();
+  }
+  mapCtx.globalAlpha = 1;
 }
 
 function updateMapLegend() {
@@ -773,13 +845,18 @@ function updateMapLegend() {
 
 function handleMapCanvasMove(event) {
   if (!mapQuadtree) return;
-  const rect = mapCanvas.getBoundingClientRect();
+  const rect = hoverCanvas.getBoundingClientRect();
   const scaleX = MAP_WIDTH / rect.width;
   const scaleY = MAP_HEIGHT / rect.height;
   const x = (event.clientX - rect.left) * scaleX;
   const y = (event.clientY - rect.top) * scaleY;
 
   const d = mapQuadtree.find(x, y, 6);
+
+  if (d !== hoveredPoint) {
+    hoveredPoint = d;
+    drawHoverRing(d);
+  }
 
   if (d) {
     tooltip
@@ -799,4 +876,28 @@ function handleMapCanvasMove(event) {
 
 function handleMapCanvasLeave() {
   tooltip.style("opacity", 0);
+  if (hoveredPoint) {
+    hoveredPoint = null;
+    drawHoverRing(null);
+  }
+}
+
+function drawHoverRing(d) {
+  hoverCtx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+  if (!d) return;
+
+  const colorScale = d3.scaleSequential()
+    .domain([mapMinVal, mapMaxVal])
+    .interpolator(mapInterpolator);
+
+  hoverCtx.beginPath();
+  hoverCtx.arc(d.projX, d.projY, 4.5, 0, 2 * Math.PI);
+  hoverCtx.fillStyle = colorScale(+d[mapCurrentMeasure]);
+  hoverCtx.fill();
+
+  hoverCtx.beginPath();
+  hoverCtx.arc(d.projX, d.projY, 6, 0, 2 * Math.PI);
+  hoverCtx.strokeStyle = "#171717";
+  hoverCtx.lineWidth = 1.5;
+  hoverCtx.stroke();
 }
