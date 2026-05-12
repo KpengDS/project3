@@ -236,7 +236,7 @@ svg {
 }
 
 .violin {
-    transition: all 0.25s ease;
+    transition: opacity 0.15s ease, stroke-width 0.15s ease, filter 0.15s ease;
     cursor: pointer;
 }
 
@@ -387,25 +387,25 @@ svg {
 }
 
 .legend-title {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   fill: #333;
   text-anchor: middle;
+  pointer-events: none;
+  user-select: none;
 }
 
 .legend-bar {
-  cursor: pointer;
-}
-
-.legend-bar:hover {
-  opacity: 0.85;
+  pointer-events: none;
 }
 
 .legend-label {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   fill: #333;
   dominant-baseline: hanging;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* ---------- Responsive ---------- */

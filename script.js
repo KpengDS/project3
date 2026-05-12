@@ -286,10 +286,12 @@ function drawViolinPlot() {
     const width = 620 - margin.left - margin.right;
     const height = 420 - margin.top - margin.bottom;
 
+    const outerWidth = width + margin.left + margin.right;
+    const outerHeight = height + margin.top + margin.bottom;
     const svg = d3.select("#violinplot")
         .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
+        .attr("viewBox", `0 0 ${outerWidth} ${outerHeight}`)
+        .attr("preserveAspectRatio", "xMidYMid meet")
         .append("g")
         .attr("transform",
             `translate(${margin.left},${margin.top})`);
@@ -609,7 +611,6 @@ function drawMap() {
   const mapWidth = 900;
   const mapHeight = 550;
 
-  // Keep skeleton overlay; only remove the previous SVG so the frame doesn't blink.
   d3.select("#map").selectAll("svg").remove();
   showMapSkeleton();
 
@@ -618,7 +619,6 @@ function drawMap() {
   loadUsTopo().then(us => {
     console.log("TopoJSON loaded:", us);
 
-    // Create SVG with proper dimensions (starts hidden, fades in once drawn)
     const svg = d3.select("#map")
       .append("svg")
       .attr("width", mapWidth)
@@ -626,13 +626,9 @@ function drawMap() {
       .attr("viewBox", `0 0 ${mapWidth} ${mapHeight}`)
       .attr("class", "map-svg");
 
-    // Get US states feature and fit projection
     const usStates = topojson.feature(us, us.objects.states);
     console.log("US States feature:", usStates);
 
-    // Merge all states into one MultiPolygon and cache a per-point in-US flag.
-    // geoContains is O(vertices) per call, so 12k points × 50 features would be
-    // painful on every redraw — compute once and reuse.
     if (!usLandCached) {
       usLandCached = topojson.merge(us, us.objects.states.geometries);
     }
@@ -648,7 +644,6 @@ function drawMap() {
 
     const path = d3.geoPath().projection(projection);
 
-    // Draw state boundaries
     svg.append("g")
       .attr("class", "states")
       .selectAll("path")
@@ -659,7 +654,6 @@ function drawMap() {
 
     console.log("States drawn. Total states:", usStates.features.length);
 
-    // Get value range for color scale (US-only so the scale isn't skewed by dropped points)
     const values = data
       .filter(d => d._inUS)
       .map(d => +d[measure])
@@ -687,7 +681,6 @@ function drawMap() {
         return Number.isFinite(x) && Number.isFinite(y) && x >= 0 && x <= mapWidth && y >= 0 && y <= mapHeight;
       });
 
-    // Draw data points
     const pointsGroup = svg.append("g")
       .attr("class", "data-points");
 
@@ -725,20 +718,17 @@ function drawMap() {
         tooltip.style("opacity", 0);
       });
 
-    // Add gradient legend (centered horizontally near top, slightly right-shifted)
-    const legendWidth = 280;
-    const legendHeight = 20;
+    const legendWidth = 200;
+    const legendHeight = 12;
     const legendX = mapWidth / 2 - legendWidth / 2 + 55;
     const legendY = 20;
 
-    // Create defs for gradient
     const defs = svg.append("defs");
     const gradient = defs.append("linearGradient")
       .attr("id", "legend-gradient")
       .attr("x1", "0%")
       .attr("x2", "100%");
 
-    // Add color stops from layer palette
     const interp = mapLayerInterpolators[measure] || d3.interpolateYlOrRd;
     const numStops = 10;
     for (let i = 0; i <= numStops; i++) {
@@ -748,14 +738,12 @@ function drawMap() {
         .attr("stop-color", interp(t));
     }
 
-    // Legend title
     svg.append("text")
       .attr("class", "legend-title")
       .attr("x", legendX + legendWidth / 2)
       .attr("y", legendY - 8)
       .text(`${measureLabels[measure]} Scale`);
 
-    // Legend background rect
     svg.append("rect")
       .attr("class", "legend-bar")
       .attr("x", legendX)
@@ -766,30 +754,26 @@ function drawMap() {
       .attr("stroke", "#999")
       .attr("stroke-width", 1);
 
-    // Legend scale
     const legendScale = d3.scaleLinear()
       .domain([minVal, maxVal])
       .range([legendX, legendX + legendWidth]);
 
-    // Min value text
     svg.append("text")
       .attr("class", "legend-label")
       .attr("x", legendX)
-      .attr("y", legendY + legendHeight + 25)
+      .attr("y", legendY + legendHeight + 15)
       .attr("text-anchor", "start")
       .text(minVal.toFixed(1));
 
-    // Max value text
     svg.append("text")
       .attr("class", "legend-label")
       .attr("x", legendX + legendWidth)
-      .attr("y", legendY + legendHeight + 25)
+      .attr("y", legendY + legendHeight + 15)
       .attr("text-anchor", "end")
       .text(maxVal.toFixed(1));
 
     console.log("Map rendered successfully with", data.length, "data points");
 
-    // Reveal the rendered map and dismiss the skeleton.
     requestAnimationFrame(() => svg.classed("is-ready", true));
     hideMapSkeleton();
 
