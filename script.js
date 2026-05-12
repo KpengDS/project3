@@ -650,9 +650,9 @@ function drawMap() {
       .join("circle")
       .attr("cx", d => d.proj[0])
       .attr("cy", d => d.proj[1])
-      .attr("r", 2)
+      .attr("r", 1.5)
       .attr("fill", d => colorScale(d.mapValue))
-      .attr("opacity", 0.65)
+      .attr("opacity", 0.55)
       .on("mouseover", function(event, d) {
         d3.select(this)
           .attr("r", 5)
@@ -673,8 +673,8 @@ function drawMap() {
       })
       .on("mouseout", function() {
         d3.select(this)
-          .attr("r", 2)
-          .attr("opacity", 0.65);
+          .attr("r", 1.5)
+          .attr("opacity", 0.55);
 
         tooltip.style("opacity", 0);
       });

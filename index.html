@@ -110,79 +110,46 @@
         <div>
           <h3>Research Question</h3>
           <p>
-            Our project asks: What is the spatial relationship between precipitation intensity and cropland density across the United States?
-            Instead of trying to prove that precipitation causes
-            more crops to grow, we focus on the spatial relationship between cropland
-            distribution and precipitation intensity.
+            For our project, we aimed to answer the question: What is the spatial relationship between precipitation intensity and cropland density across the United States? Instead of trying to prove that precipitation causes more crops to grow, we decided to focus on the spatial relationship between cropland distribution and precipitation intensity.
           </p>
         </div>
 
         <div>
           <h3>Data and Transformation</h3>
           <p>
-            We used NASA GIBS image layers for cropland distribution and precipitation
-            rate. Since these layers are image-based, we extracted color intensity values
-            from the pixels and used them as visual proxies. The green channel from the
-            cropland layer was used as an approximate cropland-density proxy, while the
-            RGB intensity from the precipitation layer was used as an approximate
-            precipitation proxy. We then sampled the pixel-level data to keep the D3
-            visualization fast in the browser.
+            We used NASA GIBS image layers for cropland distribution and precipitation rate. Since these layers are image-based, we extracted color intensity values from the pixels and used them as visual proxies. The green channel from the cropland layer was used as an approximate cropland-density proxy, while the RGB intensity from the precipitation layer was used as an approximate precipitation proxy. We then sampled the pixel-level data to keep the D3 visualization fast in the browser.
           </p>
         </div>
 
         <div>
           <h3>Visual Encoding</h3>
           <p>
-            The violin plot uses the y-axis to represent overall precipitation, rain or snow proxy for Non-Agricultural, 
-            Sparse Crops and Intense Cropland. Color represents the crop-zone
-            category: non-agricultural, sparse crops, or intense cropland. The bar chart
-            summarizes the average selected precipitation proxy for each crop-zone group,
-            making the group-level pattern easier to compare. An interactive US map visualization displays the geographic distribution of sampled data points, with a yellow-to-red color scale encoding precipitation intensity values. This spatial view complements the statistical summaries and provides geographic context for the precipitation and cropland patterns, while separate map layers distinguish overall precipitation, rain, snow, and cropland density.
+            The violin plot uses the y-axis to represent overall precipitation (rain or snow) proxy for Non-Agricultural, Sparse Crops, and Intense Cropland. For the bar chart, we used color to represent the crop-zone categories of non-agricultural, sparse crops, or intense cropland. The bar chart summarizes the average selected precipitation proxy for each crop-zone group, making the group-level pattern easier to compare. Our interactive US map visualization displays the geographic distribution of sampled data points, with a yellow-to-red color scale encoding precipitation intensity values. This spatial view complements the statistical summaries and provides geographic context for the precipitation and cropland patterns, while separate map layers distinguish overall precipitation, rain, snow, and cropland density.
           </p>
         </div>
 
         <div>
           <h3>Interaction Design</h3>
           <p>
-            The precipitation dropdown lets users switch between overall precipitation,
-            rain proxy, and snow proxy. The crop-zone dropdown lets users filter the view
-            to focus on one land-use category at a time. Hover tooltips reveal the exact
-            proxy values and approximate geographic location for each sampled point. A dedicated map layer dropdown also allows switching between overall precipitation, rain, snow, and cropland density, with coordinated tooltips and dynamic updates across the map, violin plot, and bar chart.
+            The precipitation dropdown lets users switch between overall precipitation and proxies for either rain or snow. The crop-zone dropdown lets users filter the view to focus on one land-use category at a time. Hover tooltips reveal the exact proxy values and approximate geographic location for each sampled point. A dedicated map layer dropdown also allows switching between overall precipitation, rain, snow, and cropland density, with coordinated tooltips and dynamic updates across the map, violin plot, and bar chart.
           </p>
         </div>
 
         <div>
           <h3>Development Process</h3>
           <p>
-            Our group first explored the data in Python by creating several static graphs,
-            including an overlay map, violin plot, and grouped bar charts. After choosing
-            the final research question, we exported cleaned and sampled data into CSV
-            files and rebuilt the visualization in D3. The most time-consuming part was
-            transforming image-based map layers into a format that could be used for an
-            interactive browser visualization. Based on feedback, we added an interactive US map with D3 to better show the spatial relationships between precipitation and cropland patterns across geographic regions.
+            Our group first explored the data in Python by creating several static graphs, including an overlay map, violin plot, and grouped bar charts. After choosing the final research question, we exported cleaned and sampled data into CSV files and rebuilt the visualization in D3. The most time-consuming part was transforming image-based map layers into a format that could be used for an interactive browser visualization. We decided on the violin plot for the pixel-level relationship plot because it allowed us to see the data distribution and density of the data, without compromising our ability to look at summary statistics. This allows us to show where different areas cluster around specific precipitation proxies. Then, we made a bar chart to serve as a more direct way of showing the average precipitation proxies for each region. Finally, based on feedback, we added an interactive US map with D3 to better show the spatial relationships between precipitation and cropland patterns across geographic regions. With these three visualizations together, we are able to give the user significant insight into the data being shown.
           </p>
 
           <p>
-            For the final implementation, part of the group focused on Python data extraction
-            and exploratory graphs, while another part focused on converting the cleaned data
-            into CSV files and rebuilding the visualization in D3. In total, we spent about
-            8 people-hours on data cleaning, 6 people-hours on exploratory analysis, and
-            8 people-hours on the D3 webpage and interaction design. The final map includes
-            multiple layers for overall precipitation, rain, snow, and cropland density,
-            and uses distinct color palettes so different environmental variables are easier
-            to compare. Filtering and tooltips support details-on-demand, while projected
-            outliers outside the visible US area were filtered to improve readability.
+            For the final implementation, part of the group focused on Python data extraction and exploratory graphs, while the other part focused on converting the cleaned data into CSV files and rebuilding the visualization in D3. In total, we spent about 8 people-hours on data cleaning, 6 people-hours on exploratory analysis, and 8 people-hours on the D3 webpage and interaction design. The final map includes multiple layers for overall precipitation, rain, snow, and cropland density, and uses distinct color palettes so different environmental variables are easier to compare. Filtering and tooltips support details-on-demand, while projected outliers outside the visible US area were filtered to improve readability.
           </p>
         </div>
 
         <div>
           <h3>Limitations</h3>
           <p>
-            The values in this visualization should be interpreted as approximate visual
-            intensity proxies, not exact physical measurements. The precipitation layer
-            also represents a selected snapshot rather than a long-term climate average.
-            Because of this, our conclusion focuses on visual overlap and association
-            rather than causal impact.
+            The values in this visualization should be interpreted as approximate visual intensity proxies, not exact physical measurements. The precipitation layer also represents a selected snapshot rather than a long-term climate average. Because of this, our conclusion focuses on visual overlap and association rather than causal impact.
           </p>
         </div>
       </div>
