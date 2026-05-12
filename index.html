@@ -78,7 +78,13 @@
           This map shows the spatial distribution of data points colored by the selected metric.
           Darker shades indicate higher intensity values. Use the measure dropdown above to change the visualization.
         </p>
-        <div id="map"></div>
+        <div class="chart-area chart-area--map">
+          <div id="map"></div>
+          <div class="chart-loading" id="map-loading">
+            <div class="spinner"></div>
+            <div class="spinner-text">Loading map…</div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -90,7 +96,13 @@
           the distribution of main datapoints as well as the outliers. Use the controls to
           compare different precipitation proxies and crop zones.
         </p>
-        <div id="violinplot"></div>
+        <div class="chart-area chart-area--violin">
+          <div id="violinplot"></div>
+          <div class="chart-loading" id="violinplot-loading">
+            <div class="spinner"></div>
+            <div class="spinner-text">Loading chart…</div>
+          </div>
+        </div>
       </div>
 
       <div class="chart-card">
@@ -99,7 +111,13 @@
           This bar chart summarizes the average selected precipitation proxy for each
           cropland category.
         </p>
-        <div id="barchart"></div>
+        <div class="chart-area chart-area--bar">
+          <div id="barchart"></div>
+          <div class="chart-loading" id="barchart-loading">
+            <div class="spinner"></div>
+            <div class="spinner-text">Loading chart…</div>
+          </div>
+        </div>
       </div>
     </section>
 
