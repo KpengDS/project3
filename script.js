@@ -33,8 +33,60 @@ const mapLayerInterpolators = {
   crop_density: d3.interpolateGreens
 };
 
-// Show the map skeleton immediately so users see a frame while CSV + TopoJSON load.
+let usTopoCached = null;
+let usTopoPromise = null;
+let conusStatesCached = null;
+
+const conusExcludedIds = new Set(["02", "15", "72"]);
+function buildConusFromTopo(us) {
+  const allStates = topojson.feature(us, us.objects.states);
+  return {
+    type: "FeatureCollection",
+    features: allStates.features.filter(f => !conusExcludedIds.has(String(f.id)))
+  };
+}
+
+function inConusBbox(d) {
+  return d.lon >= -125 && d.lon <= -66 && d.lat >= 24 && d.lat <= 50;
+}
+
+function loadUsTopo() {
+  if (usTopoCached) return Promise.resolve(usTopoCached);
+  if (usTopoPromise) return usTopoPromise;
+  usTopoPromise = d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json")
+    .then(us => { usTopoCached = us; return us; });
+  return usTopoPromise;
+}
+
+function showChartSkeleton(containerId, label = "Loading…") {
+  const container = d3.select(`#${containerId}`);
+  if (container.select(".chart-skeleton").empty()) {
+    const skel = container.append("div").attr("class", "chart-skeleton");
+    skel.append("div").attr("class", "chart-skeleton__spinner");
+    skel.append("div").attr("class", "chart-skeleton__label").text(label);
+  }
+}
+
+function hideChartSkeleton(containerId) {
+  const skel = d3.select(`#${containerId}`).select(".chart-skeleton");
+  if (!skel.empty()) {
+    skel.classed("is-hidden", true);
+    setTimeout(() => skel.remove(), 400);
+  }
+}
+
+function showMapSkeleton() {
+  showChartSkeleton("map", "Loading map…");
+}
+
+function hideMapSkeleton() {
+  hideChartSkeleton("map");
+}
+
+// Show skeletons immediately so the frames are visible while data loads.
 showMapSkeleton();
+showChartSkeleton("violinplot", "Loading chart…");
+showChartSkeleton("barchart", "Loading chart…");
 
 Promise.all([
   d3.csv(pointFile, d => ({
@@ -447,7 +499,7 @@ function drawViolinPlot() {
 
   drawLegend(svg, width - 30, -10);
 
-
+  hideChartSkeleton("violinplot");
 }
 
 
@@ -576,49 +628,8 @@ function drawBarChart() {
     .attr("y", d => y(d[summaryCol]) - 8)
     .attr("text-anchor", "middle")
     .text(d => d[summaryCol].toFixed(1));
-}
 
-let usTopoCached = null;
-let usTopoPromise = null;
-let conusStatesCached = null;
-
-const conusExcludedIds = new Set(["02", "15", "72"]); // Alaska, Hawaii, Puerto Rico
-
-function buildConusFromTopo(us) {
-  const allStates = topojson.feature(us, us.objects.states);
-  return {
-    type: "FeatureCollection",
-    features: allStates.features.filter(f => !conusExcludedIds.has(String(f.id)))
-  };
-}
-
-function inConusBbox(d) {
-  return d.lon >= -125 && d.lon <= -66 && d.lat >= 24 && d.lat <= 50;
-}
-
-function showMapSkeleton() {
-  const container = d3.select("#map");
-  if (container.select(".map-skeleton").empty()) {
-    const skel = container.append("div").attr("class", "map-skeleton");
-    skel.append("div").attr("class", "map-skeleton__spinner");
-    skel.append("div").attr("class", "map-skeleton__label").text("Loading map…");
-  }
-}
-
-function hideMapSkeleton() {
-  const skel = d3.select("#map").select(".map-skeleton");
-  if (!skel.empty()) {
-    skel.classed("is-hidden", true);
-    setTimeout(() => skel.remove(), 400);
-  }
-}
-
-function loadUsTopo() {
-  if (usTopoCached) return Promise.resolve(usTopoCached);
-  if (usTopoPromise) return usTopoPromise;
-  usTopoPromise = d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json")
-    .then(us => { usTopoCached = us; return us; });
-  return usTopoPromise;
+  hideChartSkeleton("barchart");
 }
 
 function drawMap() {
