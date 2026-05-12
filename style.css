@@ -47,7 +47,7 @@ h1 {
   max-width: 1000px;
   font-size: clamp(34px, 5vw, 56px);
   line-height: 1.04;
-  letter-spacing: 0;
+  letter-spacing: -1.8px;
 }
 
 .subtitle,
@@ -193,7 +193,7 @@ select:focus {
 .writeup h2 {
   margin: 0 0 10px;
   font-size: 26px;
-  letter-spacing: 0;
+  letter-spacing: -0.4px;
 }
 
 .chart-note {
@@ -327,16 +327,11 @@ svg {
   max-width: 100%;
   height: auto;
   opacity: 0;
-  cursor: grab;
   transition: opacity 0.45s ease;
 }
 
 .map-svg.is-ready {
   opacity: 1;
-}
-
-.map-svg:active {
-  cursor: grabbing;
 }
 
 /* Generic chart skeleton: shimmering placeholder + brown spinner */
