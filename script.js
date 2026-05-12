@@ -66,6 +66,8 @@ Promise.all([
   drawBarChart();
   drawMap();
 
+  hideAllLoaders();
+
   d3.select("#measure-select")
     .on("change", function() {
       currentMetric = this.value;
@@ -76,11 +78,40 @@ Promise.all([
     .on("change", updateCharts);
 });
 
+const LOADER_IDS = ["map-loading", "violinplot-loading", "barchart-loading"];
+
+function showAllLoaders() {
+  LOADER_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("hidden");
+  });
+}
+
+function hideAllLoaders() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      LOADER_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add("hidden");
+      });
+    });
+  });
+}
+
+let switchLoaderTimer = null;
+
 function updateCharts() {
+  if (switchLoaderTimer) clearTimeout(switchLoaderTimer);
+  switchLoaderTimer = setTimeout(showAllLoaders, 120);
+
   updateMapTitle();
   drawViolinPlot();
   drawBarChart();
   drawMap();
+
+  clearTimeout(switchLoaderTimer);
+  switchLoaderTimer = null;
+  hideAllLoaders();
 }
 
 function getCurrentMeasure() {
