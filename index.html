@@ -40,13 +40,11 @@
 <section class="finding-card">
   <h2>Main Finding</h2>
   <p>
-    The visualization shows intense cropland areas have a higher average
-    precipitation proxy than sparse cropland and non-agricultural areas. However,
-    the violin plot does not show much difference of distribution of overall 
-    precipitation, rain or snow proxy for Non-Agricultural, Sparse Crops, Intense Cropland in main data except for distribution of outliers.
-    (Although for the overall precipitation and snow proxy, there are more data clustered at the 
-    top y axis and clustered at both top and bottom y axis in rain proxy for intense cropland.)
-    So precipitation alone does not explain cropland density.
+    Intense cropland areas have the highest average overall precipitation proxy,
+    but the violin plots show that the three crop-zone distributions still overlap
+    substantially. Rain, snow, and overall precipitation vary by region, yet the
+    distribution-level view suggests that precipitation alone does not explain
+    cropland density across the contiguous United States.
   </p>
 </section>
 
@@ -87,9 +85,9 @@
       <div class="chart-card">
         <h2>Pixel-Level Relationship</h2>
         <p class="chart-note">
-          Each violin plot for the three cropland categories represents
-          the distribution of main datapoints as well as the outliers. Use the controls to
-          compare different precipitation proxies and crop zones.
+          Each violin shape shows the distribution of sampled pixel values within a
+          cropland category, including the tails and outliers. Use the controls to
+          compare precipitation proxies and crop zones.
         </p>
         <div id="violinplot"></div>
       </div>
@@ -125,14 +123,14 @@
         <div>
           <h3>Visual Encoding</h3>
           <p>
-            The violin plot uses the y-axis to represent overall precipitation (rain or snow) proxy for Non-Agricultural, Sparse Crops, and Intense Cropland. For the bar chart, we used color to represent the crop-zone categories of non-agricultural, sparse crops, or intense cropland. The bar chart summarizes the average selected precipitation proxy for each crop-zone group, making the group-level pattern easier to compare. Our interactive US map visualization displays the geographic distribution of sampled data points, with a yellow-to-red color scale encoding precipitation intensity values. This spatial view complements the statistical summaries and provides geographic context for the precipitation and cropland patterns, while separate map layers distinguish overall precipitation, rain, snow, and cropland density.
+            The violin plot uses the y-axis to represent the selected precipitation or cropland proxy for Non-Agricultural, Sparse Crops, and Intense Cropland. For the bar chart, we used color to represent the crop-zone categories of non-agricultural, sparse crops, or intense cropland. The bar chart summarizes the average selected proxy for each crop-zone group, making the group-level pattern easier to compare. Our interactive US map visualization displays the geographic distribution of sampled data points, with sequential color scales encoding the selected measure. This spatial view complements the statistical summaries and provides geographic context for overall precipitation, rain, snow, and cropland density.
           </p>
         </div>
 
         <div>
           <h3>Interaction Design</h3>
           <p>
-            The precipitation dropdown lets users switch between overall precipitation and proxies for either rain or snow. The crop-zone dropdown lets users filter the view to focus on one land-use category at a time. Hover tooltips reveal the exact proxy values and approximate geographic location for each sampled point. A dedicated map layer dropdown also allows switching between overall precipitation, rain, snow, and cropland density, with coordinated tooltips and dynamic updates across the map, violin plot, and bar chart.
+            The measure dropdown lets users switch between overall precipitation, rain, snow, and cropland-density proxies. The crop-zone dropdown filters the map, violin plot, and bar chart together so users can focus on one land-use category at a time. Hover tooltips reveal proxy values, crop-zone labels, and approximate geographic location for sampled points. Coordinating the same controls across all three views helps users compare the geographic pattern, the distribution shape, and the group average without changing context.
           </p>
         </div>
 

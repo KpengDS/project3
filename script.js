@@ -37,8 +37,6 @@ let usTopoCached = null;
 let usTopoPromise = null;
 let conusStatesCached = null;
 
-// Alaska=2, Hawaii=15, Puerto Rico=72 (FIPS). us-atlas may store ids as strings ("02") or
-// numbers (2) depending on the build, so coerce with +f.id for a robust comparison.
 const conusExcludedFips = new Set([2, 15, 72]);
 
 function buildConusFromTopo(us) {
@@ -86,7 +84,6 @@ function hideMapSkeleton() {
   hideChartSkeleton("map");
 }
 
-// Show skeletons immediately so the frames are visible while data loads.
 showMapSkeleton();
 showChartSkeleton("violinplot", "Loading chart…");
 showChartSkeleton("barchart", "Loading chart…");
@@ -113,10 +110,8 @@ Promise.all([
 ])
 .then(([points, summary, us]) => {
 
-  // Build CONUS feature collection (exclude Alaska=02, Hawaii=15, Puerto Rico=72)
   conusStatesCached = buildConusFromTopo(us);
 
-  // Drop points outside CONUS (Canada, Mexico, lakes, oceans). Bbox prefilter for speed.
   pointsData = points.filter(d =>
     inConusBbox(d) && d3.geoContains(conusStatesCached, [d.lon, d.lat])
   );
@@ -162,6 +157,19 @@ function getFilteredPoints() {
   }
 
   return pointsData.filter(d => d.crop_zone === selectedZone);
+}
+
+function getNiceExtent(values, fallback = [0, 1]) {
+  const numericValues = values.filter(Number.isFinite);
+  if (!numericValues.length) return fallback;
+
+  const extent = d3.extent(numericValues);
+  if (extent[0] === extent[1]) {
+    const pad = Math.max(1, Math.abs(extent[0]) * 0.05);
+    return [extent[0] - pad, extent[1] + pad];
+  }
+
+  return extent;
 }
 
 function updateMapTitle() {
@@ -299,7 +307,8 @@ function drawViolinPlot() {
     if (!data.length) {
       return;
     }
-    const selectedMetric = currentMetric;
+    const selectedMetric = getCurrentMeasure();
+    currentMetric = selectedMetric;
 
     const cropZoneOrder = [
       "Non-Agricultural",
@@ -342,10 +351,10 @@ function drawViolinPlot() {
 
     const values = data
     .map(d => +d[selectedMetric])
-    .filter(v => !isNaN(v));
+    .filter(Number.isFinite);
 
     const y = d3.scaleLinear()
-    .domain(d3.extent(values))
+    .domain(getNiceExtent(values))
     .nice()
     .range([height, 0]);
 
@@ -639,24 +648,24 @@ function drawMap() {
   const measure = getCurrentMeasure();
   const data = getFilteredPoints();
 
-  if (!data.length) return;
-
   const mapWidth = 900;
   const mapHeight = 550;
 
-  // Keep skeleton overlay; only remove the previous SVG so the frame doesn't blink.
   d3.select("#map").selectAll("svg").remove();
   showMapSkeleton();
+
+  if (!data.length) {
+    hideMapSkeleton();
+    return;
+  }
 
   console.log("drawMap() called with measure:", measure);
 
   loadUsTopo().then(us => {
-    // Lazily build CONUS feature collection if it wasn't done during initial load
     if (!conusStatesCached) {
       conusStatesCached = buildConusFromTopo(us);
     }
 
-    // Create SVG with proper dimensions (starts hidden, fades in once drawn)
     const svg = d3.select("#map")
       .append("svg")
       .attr("width", mapWidth)
@@ -664,14 +673,25 @@ function drawMap() {
       .attr("viewBox", `0 0 ${mapWidth} ${mapHeight}`)
       .attr("class", "map-svg");
 
-    // CONUS-only Albers projection fitted to the lower 48 + DC
     const projection = d3.geoAlbers()
       .fitSize([mapWidth, mapHeight], conusStatesCached);
 
     const path = d3.geoPath().projection(projection);
 
-    // Draw state boundaries (CONUS only)
-    svg.append("g")
+    const mapLayer = svg.append("g")
+      .attr("class", "map-layer");
+
+    svg.call(
+      d3.zoom()
+        .scaleExtent([1, 8])
+        .translateExtent([[0, 0], [mapWidth, mapHeight]])
+        .extent([[0, 0], [mapWidth, mapHeight]])
+        .on("zoom", event => {
+          mapLayer.attr("transform", event.transform);
+        })
+    );
+
+    mapLayer.append("g")
       .attr("class", "states")
       .selectAll("path")
       .data(conusStatesCached.features)
@@ -679,13 +699,11 @@ function drawMap() {
       .attr("d", path)
       .attr("class", "state");
 
-    // Get value range for color scale
     const values = data
       .map(d => +d[measure])
-      .filter(v => !isNaN(v));
+      .filter(Number.isFinite);
 
-    const minVal = d3.min(values);
-    const maxVal = d3.max(values);
+    const [minVal, maxVal] = getNiceExtent(values);
 
     console.log("Color scale domain:", minVal, "to", maxVal);
 
@@ -705,8 +723,7 @@ function drawMap() {
         return Number.isFinite(x) && Number.isFinite(y) && x >= 0 && x <= mapWidth && y >= 0 && y <= mapHeight;
       });
 
-    // Draw data points
-    const pointsGroup = svg.append("g")
+    const pointsGroup = mapLayer.append("g")
       .attr("class", "data-points");
 
     pointsGroup.selectAll("circle")
@@ -743,20 +760,17 @@ function drawMap() {
         tooltip.style("opacity", 0);
       });
 
-    // Add gradient legend (centered horizontally near top, slightly right-shifted)
     const legendWidth = 280;
     const legendHeight = 20;
     const legendX = mapWidth / 2 - legendWidth / 2 + 55;
     const legendY = 20;
 
-    // Create defs for gradient
     const defs = svg.append("defs");
     const gradient = defs.append("linearGradient")
       .attr("id", "legend-gradient")
       .attr("x1", "0%")
       .attr("x2", "100%");
 
-    // Add color stops from layer palette
     const interp = mapLayerInterpolators[measure] || d3.interpolateYlOrRd;
     const numStops = 10;
     for (let i = 0; i <= numStops; i++) {
@@ -766,14 +780,12 @@ function drawMap() {
         .attr("stop-color", interp(t));
     }
 
-    // Legend title
     svg.append("text")
       .attr("class", "legend-title")
       .attr("x", legendX + legendWidth / 2)
       .attr("y", legendY - 8)
       .text(`${measureLabels[measure]} Scale`);
 
-    // Legend background rect
     svg.append("rect")
       .attr("class", "legend-bar")
       .attr("x", legendX)
@@ -784,12 +796,10 @@ function drawMap() {
       .attr("stroke", "#999")
       .attr("stroke-width", 1);
 
-    // Legend scale
     const legendScale = d3.scaleLinear()
       .domain([minVal, maxVal])
       .range([legendX, legendX + legendWidth]);
 
-    // Min value text
     svg.append("text")
       .attr("class", "legend-label")
       .attr("x", legendX)
@@ -797,7 +807,6 @@ function drawMap() {
       .attr("text-anchor", "start")
       .text(minVal.toFixed(1));
 
-    // Max value text
     svg.append("text")
       .attr("class", "legend-label")
       .attr("x", legendX + legendWidth)
@@ -807,7 +816,6 @@ function drawMap() {
 
     console.log("Map rendered successfully with", data.length, "data points");
 
-    // Reveal the rendered map and dismiss the skeleton.
     requestAnimationFrame(() => svg.classed("is-ready", true));
     hideMapSkeleton();
 
