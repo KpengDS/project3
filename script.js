@@ -468,7 +468,7 @@ function drawViolinPlot() {
 
     // });
 
-  drawLegend(svg, width - 30, -10);
+  drawLegend(svg, width - 170, -10);
 
 
 }
@@ -488,7 +488,9 @@ function drawLegend(svg, x, y) {
     .attr("height", 84)
     .attr("rx", 8)
     .attr("fill", "white")
-    .attr("opacity", 0.85);
+    .attr("fill-opacity", 0.93)
+    .attr("stroke", "#e8dfd0")
+    .attr("stroke-width", 1);
 
   zones.forEach((zone, i) => {
     const row = legend.append("g")
