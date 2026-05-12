@@ -468,7 +468,7 @@ function drawViolinPlot() {
 
     // });
 
-  drawLegend(svg, width - 150, -36);
+  drawLegend(svg, width - 145, -40);
 
 
 }
