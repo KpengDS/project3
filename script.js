@@ -27,9 +27,9 @@ let summaryData;
 let currentMetric = "precip_intensity";
 
 const mapLayerInterpolators = {
-  precip_intensity: d3.interpolateYlOrRd,
-  rain_proxy: t => d3.interpolate("#4db8ff", "#00204d")(t),
-  snow_proxy: t => d3.interpolate("#a8a8a8", "#1f4788")(t),
+  precip_intensity: t => d3.interpolate("#ffe8cc", "#a50026")(t),
+  rain_proxy: t => d3.interpolate("#80dfff", "#00204d")(t),
+  snow_proxy: t => d3.interpolate("#b3b3b3", "#1f4788")(t),
   crop_density: d3.interpolateGreens
 };
 
